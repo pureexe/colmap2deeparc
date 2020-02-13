@@ -23,7 +23,7 @@
 // repeat line until <number_extrinsic>
 .
 .
-<point3d_x> <point3d_y> <point3d_z>
+<point3d_x> <point3d_y> <point3d_z> <point3d_r> <point3d_g> <point3d_b>
 .
 .
 // repeat line until <number_point3d>
@@ -62,6 +62,8 @@
 | point3d_x | float | x axis of point3d |
 | point3d_y | float | y axis of point3d |
 | point3d_z | float | z axis of point3d |
-
+| point3d_r | int | r color [0-255] of poin3d|
+| point3d_g | int | g color [0-255] of poin3d |
+| point3d_b | int | b color [0-255] of poin3d |
 ## Example file
 - Soon
