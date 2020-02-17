@@ -88,6 +88,7 @@ def write_file(output_path, data):
         
         for point3d in point3ds:
             x, y, z = point3d['position']
+            #x,y,z = np.random.normal(0, 0.1, 3)
             r, g, b = point3d['color']
             f.write('{:f} {:f} {:f} {:d} {:d} {:d}\n'.format(
                 float(x), float(y), float(z), int(r), int(g), int(b)
