@@ -45,7 +45,7 @@ def write_file(output_path, data):
     with open(output_path,'w') as f:
         f.write('{:f}\n'.format(api_version)) #version at head
         #print file number
-        f.write('{:d} {:d} {:d} {:d}\n'.format(
+        f.write('{:d} {:d} {:d} 0 {:d}\n'.format(
             len(point2ds),
             len(intrinsics),
             len(extrinsics),

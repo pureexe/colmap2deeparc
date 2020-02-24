@@ -8,7 +8,7 @@ def main(args):
     colmap_data = {}
     if detect_database(args.input):
         # if input is database file do read database
-        colmap_data = database_reader(args.input)
+        colmap_data = database_reader(args.input,args.image_dir)
     elif detect_model(args.input):
         # if input is model do binary read
         colmap_data = binary_reader(args.input)
@@ -34,4 +34,11 @@ if __name__ == '__main__':
         type=str,
         required=True,
         help='deeparch file output')
+    parser.add_argument(
+        '-d',
+        '--image_dir',
+        type=str,
+        default='',
+        help='image directory for get pixel info'
+    )
     main(parser.parse_args())
