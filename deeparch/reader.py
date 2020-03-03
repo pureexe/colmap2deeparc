@@ -36,6 +36,7 @@ def binary_reader(binary_path):
         # filter only useful extrinsic data
         extrinsic.append({
             'id': img_id,
+            'name': name,
             'rotation': qvec,
             'translation': tvec
         })

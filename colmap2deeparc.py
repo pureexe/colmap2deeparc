@@ -25,20 +25,22 @@ if __name__ == '__main__':
         '-i',
         '--input',
         type=str,
-        required=True,
+        # required=True,
+        default='D:/Datasets/teabottle_green/undistrort/sparse',
         help='colmap model directory / colmap database file (.db)',
     )
     parser.add_argument(
         '-o',
         '--output',
         type=str,
-        required=True,
+        # required=True,
+        default='teabottle_green.deeparc',
         help='deeparch file output')
     parser.add_argument(
         '-d',
         '--image_dir',
         type=str,
-        default='',
+        default='D:/Datasets/teabottle_green/images',
         help='image directory for get pixel info'
     )
     main(parser.parse_args())
