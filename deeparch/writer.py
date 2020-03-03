@@ -77,14 +77,20 @@ def write_point3d(f, point3ds):
                 float(x), float(y), float(z), int(r), int(g), int(b)
             ))
 
-def write_extrinsic_with_inv(f, extrinsic,origin_rot_inv):
-    tvec = extrinsic['translation']
+def camera_matrix(extrinsic):
     qvec = extrinsic['rotation']
     rotation = Rotation.from_quat([qvec[1],qvec[2],qvec[3],qvec[0]])
-    rot_mat = rotation.as_dcm()
-    rot_mat = np.matmul(rot_mat, origin_rot_inv)
-    rotation = Rotation.from_dcm(rot_mat)
+    cam_mat = np.eye(4)
+    cam_mat[:3,:3] = rotation.as_dcm()
+    cam_mat[:3,3] = extrinsic['translation']
+    return cam_mat
+
+def write_extrinsic_with_inv(f, extrinsic,refcam_inv):
+    cam_mat = camera_matrix(extrinsic)
+    cam_mat = np.matmul(cam_mat, refcam_inv)
+    rotation = Rotation.from_dcm(cam_mat[:3,:3])
     rotvec = rotation.as_rotvec()
+    tvec = cam_mat[:3,3]
     f.write('{:f} {:f} {:f} 3 {:f} {:f} {:f}\n'.format(
         tvec[0],
         tvec[1],
@@ -154,26 +160,24 @@ def write_file(output_path, data):
                     extrinsic_col[c] = extrinsic
             
             #origin rotation need to be Identity for compose
-            ref_cam = extrinsic_row[0]
-            qvec = extrinsic_row[0]['rotation']
-            rotation = Rotation.from_quat([qvec[1],qvec[2],qvec[3],qvec[0]])
-            rot_mat = rotation.as_dcm()            
-            for point3d in point3ds:
-                current_point = np.asarray(point3d['position']).reshape((3,1))
-                transform_point = np.matmul(rot_mat,current_point)
-                point3d['position'] = transform_point.reshape((3,))
+            refcam_mat = camera_matrix(extrinsic_row[0])
+            refcam_inv = np.linalg.inv(refcam_mat)
 
-            #extrinsic_mat = np.eye(4)
-            #extrinsic_mat[:3,:3] = rot_mat
-            #extrinsic_mat[:3,3] = extrinsic_row[0]['translation']
+            # apply rotation from refcam to all 3d point
+            current_point = np.ones((4,1))
+            for i in range(len(point3ds)):
+                current_point[:3,0] = point3ds[i]['position']
+                transform_point = np.matmul(refcam_mat,current_point)
+                point3ds[i]['position'] = transform_point[:3,0]
+            
 
             #origin_rot_inv = rot_mat.T
             #origin_tran_inv = (-np.matmul(rot_mat.T,extrinsic_row[0]['translation'].reshape((3,1)))).reshape((3,))
             # origin_rot_inv = np.eye(3) # identifiy for debug
             for i in range(max_row):
-                write_extrinsic_with_inv(f, extrinsic_row[i], origin_rot_inv)
+                write_extrinsic_with_inv(f, extrinsic_row[i], refcam_inv)
             for i in range(1,max_col):
-                write_extrinsic_with_inv(f, extrinsic_col[i], origin_rot_inv)    
+                write_extrinsic_with_inv(f, extrinsic_col[i], refcam_inv)    
             #write_extrinsic_with_inv(f, ref_cam, np.eye(3))
         else:
             for point2d in point2ds:
