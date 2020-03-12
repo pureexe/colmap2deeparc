@@ -1,7 +1,7 @@
 # colmap to deeparch format
 import argparse
 from deeparch.writer import write_file
-from deeparch.reader import database_reader, binary_reader, \
+from deeparch.reader import database_reader, database_reader2, database_reader_dset, binary_reader, \
     detect_model, detect_database
 
 def main(args):
@@ -9,7 +9,7 @@ def main(args):
     if detect_database(args.input):
         # if input is database file do read database
         print("reading database")
-        colmap_data = database_reader(args.input,args.image_dir)
+        colmap_data = database_reader2(args.input,args.image_dir)
         if 'reference_camera_pose' in args and len(args.reference_camera_pose > 0):
             print("use reference")
             reference_data = binary_reader(args.reference_camera_pose)
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         '--input',
         type=str,
         # required=True,
-        default='teabottle_green_2_small.db',
+        default='teabottle_green_2.db',
         help='colmap model directory / colmap database file (.db)',
     )
     parser.add_argument(
