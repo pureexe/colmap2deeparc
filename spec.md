@@ -4,7 +4,7 @@
 
 ```
 <deeparch_version> 
-<number_point2d> <number_instrinsic> <number_extrinsic_row> <number_extrinsic_col> <number_point3d>
+<number_point2d> <number_instrinsic> <number_extrinsic_on_arc> <number_extrinsic_on_ring> <number_point3d>
 <instrinsic_id_1/position_on_arc> <extrinsic_id_1/position_on_ring> <point3d_id_1> <point2d_x_1> <point2d_y_1>
 .
 .
@@ -39,8 +39,8 @@
 | deeparch_version | float | version number of deeparch, **always** place at top for software compatibility | 
 | number_point2d | int | number of point2d line in this file |
 | number_instrinsic | int | number of instrinsic line in this file |
-| number_extrinsic_row | int | number of extrinsic line in this file |
-| number_extrinsic_col | int | extrinsic in column, set to 0 if don't want to share extrinsic |
+| number_extrinsic_on_arc | int | number of extrinsic line in this file |
+| number_extrinsic_on_ring | int | extrinsic in column, set to 0 if don't want to share extrinsic |
 | number_point3d | int | number of point3d line in this file |
 | instrinsic_id_1 | int | reference id to intrinsic line, index start from 0 |
 | extrinsic_id_1 | int | reference id to extrinsic line, index start from 0 |
