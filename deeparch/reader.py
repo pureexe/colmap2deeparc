@@ -1,7 +1,9 @@
 import os
 from colmap.database import COLMAPDatabase, blob_to_array, pair_id_to_image_ids
 from colmap.read_write_model import read_model, CAMERA_MODEL_IDS
+import multiprocessing
 import numpy as np
+import sqlite3
 
 
 def binary_reader(binary_path):
@@ -81,7 +83,7 @@ def database_reader(database_path,image_dir = ''):
     match_search = {}
     point2d_track = []
 
-
+    print("building keypoint search")
     for keypoint_image in keypoints_data:
         img_id, r, c, data = keypoint_image
         kpt = blob_to_array(data,np.float32,(r,c))
@@ -91,6 +93,7 @@ def database_reader(database_path,image_dir = ''):
             image_kpt[i] = [u,v]
         keypoint_search[img_id] = image_kpt
 
+    print("building match search")
     for match_record in matches_data:
         image_from , image_to = pair_id_to_image_ids(match_record[0])
         image_from = int(image_from)
@@ -102,6 +105,8 @@ def database_reader(database_path,image_dir = ''):
             lookup = blob_to_array(match_record[3],np.int32, (match_record[1],match_record[2]))
             match_search[match_record[0]] = dict(lookup)
 
+    print("build point 2d track")
+    
     for image_from, records in match_from.items():
         for kpt_id, [x,y] in keypoint_search[image_from].items():
             buffer = []

@@ -8,7 +8,14 @@ def main(args):
     colmap_data = {}
     if detect_database(args.input):
         # if input is database file do read database
+        print("reading database")
         colmap_data = database_reader(args.input,args.image_dir)
+        if 'reference_camera_pose' in args and len(args.reference_camera_pose > 0):
+            print("use reference")
+            reference_data = binary_reader(args.reference_camera_pose)
+            new_colmap_data = (colmap_data[0],reference_data[1],reference_data[2],colmap_data[3])
+            colmap_data = new_colmap_data
+
     elif detect_model(args.input):
         # if input is model do binary read
         colmap_data = binary_reader(args.input)
@@ -26,7 +33,7 @@ if __name__ == '__main__':
         '--input',
         type=str,
         # required=True,
-        default='D:/Datasets/teabottle_green/undistrort/sparse',
+        default='D:/Datasets/teabottle_green/teabottle_green_2.db',
         help='colmap model directory / colmap database file (.db)',
     )
     parser.add_argument(
@@ -34,8 +41,16 @@ if __name__ == '__main__':
         '--output',
         type=str,
         # required=True,
-        default='teabottle_green.deeparc',
+        default='teabottle_green_random_init.deeparc',
         help='deeparch file output')
+    parser.add_argument(
+        '-r',
+        '--reference-camera-pose',
+        type=str,
+        # required=True,
+        #default='D:/Datasets/teabottle_green/undistrort',
+        default='',
+        help='reference camera pose model')
     parser.add_argument(
         '-d',
         '--image_dir',
