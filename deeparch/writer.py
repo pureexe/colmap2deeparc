@@ -141,7 +141,7 @@ def write_file(output_path, data):
                 r,c = point2d['rc']
                 f.write('{:d} {:d} {:d} {:f} {:f}\n'.format(
                     int(r),
-                    int(r*max_col + c),
+                    int(c),
                     int(point3d_ids[point2d['point3d_id']]),
                     float(x),
                     float(y)
@@ -169,16 +169,13 @@ def write_file(output_path, data):
                 current_point[:3,0] = point3ds[i]['position']
                 transform_point = np.matmul(refcam_mat,current_point)
                 point3ds[i]['position'] = transform_point[:3,0]
-            
 
-            #origin_rot_inv = rot_mat.T
-            #origin_tran_inv = (-np.matmul(rot_mat.T,extrinsic_row[0]['translation'].reshape((3,1)))).reshape((3,))
-            # origin_rot_inv = np.eye(3) # identifiy for debug
             for i in range(max_row):
                 write_extrinsic_with_inv(f, extrinsic_row[i], refcam_inv)
+                
             for i in range(1,max_col):
                 write_extrinsic_with_inv(f, extrinsic_col[i], refcam_inv)    
-            #write_extrinsic_with_inv(f, ref_cam, np.eye(3))
+            
         else:
             for point2d in point2ds:
                 x,y = point2d['position']
