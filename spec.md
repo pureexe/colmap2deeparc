@@ -5,7 +5,7 @@
 ```
 <deeparch_version> 
 <number_point2d> <number_instrinsic> <number_extrinsic_row> <number_extrinsic_col> <number_point3d>
-<instrinsic_id_1> <extrinsic_id_1> <point3d_id_1> <point2d_x_1> <point2d_y_1>
+<instrinsic_id_1/position_on_arc> <extrinsic_id_1/position_on_ring> <point3d_id_1> <point2d_x_1> <point2d_y_1>
 .
 .
 // repeat line until <number of 2d point>
