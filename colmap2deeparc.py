@@ -33,7 +33,7 @@ if __name__ == '__main__':
         '--input',
         type=str,
         # required=True,
-        default='D:/Datasets/teabottle_green/teabottle_green_2.db',
+        default='teabottle_green_2_small.db',
         help='colmap model directory / colmap database file (.db)',
     )
     parser.add_argument(

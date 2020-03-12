@@ -4,6 +4,7 @@ from colmap.read_write_model import read_model, CAMERA_MODEL_IDS
 import multiprocessing
 import numpy as np
 import sqlite3
+import json
 
 
 def binary_reader(binary_path):
@@ -56,6 +57,32 @@ def binary_reader(binary_path):
 
     return (point2d, instrinsic, extrinsic, point3d)
 
+def database_reader2(database_path,image_dir = ''):
+    db = COLMAPDatabase.connect(database_path)
+    c = db.cursor()
+    c.execute('SELECT camera_id,model,params FROM cameras')
+    cameras_data = c.fetchall()
+    c.execute('SELECT image_id,camera_id FROM images')
+    images_data = c.fetchall()
+    c.execute("SELECT pair_id,rows,cols,data FROM matches")
+    matches_data = c.fetchall()
+    c.execute("SELECT image_id,rows,cols,data FROM keypoints")
+    keypoints_data = c.fetchall()
+    db.close()
+
+    print("building keypoint search")
+    for keypoint_image in keypoints_data:
+        img_id, r, c, data = keypoint_image
+        kpt = blob_to_array(data,np.float32,(r,c))
+        print(kpt)
+        exit()
+        image_kpt = {}
+        for i in range(r):
+            u,v =  kpt[i,:2]
+            image_kpt[i] = [u,v]
+        keypoint_search[img_id] = image_kpt
+
+
 
 def database_reader(database_path,image_dir = ''):
     
@@ -104,13 +131,14 @@ def database_reader(database_path,image_dir = ''):
             match_from[image_from].append(match_record[0])
             lookup = blob_to_array(match_record[3],np.int32, (match_record[1],match_record[2]))
             match_search[match_record[0]] = dict(lookup)
+            print(dict(lookup))
+            exit()
 
     print("build point 2d track")
-    
-    for image_from, records in match_from.items():
-        for kpt_id, [x,y] in keypoint_search[image_from].items():
+    for image_from, records in match_from.items(): # iterate over match pairs
+        for kpt_id, [x,y] in keypoint_search[image_from].items(): # iterate over keypoint of image_from
             buffer = []
-            for record in records:
+            for record in records: # iterate over its matched pair
                 if kpt_id in match_search[record]:
                     _, image_to = pair_id_to_image_ids(record)
                     kpt_on_dest = match_search[record][kpt_id]
@@ -132,6 +160,12 @@ def database_reader(database_path,image_dir = ''):
                     print(keypoint_counter)
                 point2d_track = point2d_track + buffer
                 keypoint_counter = keypoint_counter + 1
+
+    print("done")
+    print(point2d_track)
+    with open("test.txt", "w") as fo:
+      json.dump(point2d_track, fo)
+    exit()
 
     #create instrinsic
     for camera in cameras_data:
