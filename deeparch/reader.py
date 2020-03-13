@@ -140,7 +140,7 @@ def database_reader_dset(database_path,image_dir = ''):
 
     cc += 1
     if cc % 1000 == 0:
-      print(cc)
+      print('%.2f%%' % (cc / len(matches_data) * 100))
 
 
   keypoint_counter = 0
@@ -173,12 +173,14 @@ def database_reader_dset(database_path,image_dir = ''):
     })
 
   sizes = [len(lst[g]) for g in lst]
+  sizes.sort()
   print("size max", max(sizes))
   for g in lst:
     if len(lst[g]) == 1308076:
       # print(lst[g])
       print("still found", g)
 
+  print(sizes)
   print("done")
   print(len(point2d))
   print(len(dset))
@@ -186,7 +188,7 @@ def database_reader_dset(database_path,image_dir = ''):
 
   exit()
   return (point2d, intrinsic, extrinsic, point3d)
-def database_reader2(database_path,image_dir = ''):
+def database_reader_bfs(database_path,image_dir = ''):
   db = COLMAPDatabase.connect(database_path)
   c = db.cursor()
   c.execute('SELECT camera_id,model,params FROM cameras')
@@ -233,6 +235,7 @@ def database_reader2(database_path,image_dir = ''):
   print(sys.getrecursionlimit())
   print("Creating graph")
   edges = {}
+  cc = 0
   for match_record in matches_data:
     image_from, image_to = pair_id_to_image_ids(match_record[0])
     image_from = int(image_from)
@@ -250,30 +253,63 @@ def database_reader2(database_path,image_dir = ''):
       edges[k0].append(k1)
       edges[k1].append(k0)
 
+    cc += 1
+    if cc % 1000 == 0:
+      print('%.2f%%' % (cc / len(matches_data) * 100))
+
 
   keypoint_counter = 0
   keypoint_ids = {}
 
   print("Assigning Ids")
-  def dfs(node):
+  def bfs(node):
     q = deque()
     q.append(node)
     keypoint_ids[node] = keypoint_counter
     while q:
-      node = q.popleft()
+      node = q.pop()
       for nnode in edges[node]:
         if nnode not in keypoint_ids:
           keypoint_ids[nnode] = keypoint_counter
           q.append(nnode)
-
   for k in edges:
     if k in keypoint_ids: continue
-    dfs(k)
+    bfs(k)
     keypoint_counter += 1
+
+  print("Verifying track")
+  lst = {}
+  for k in edges:
+    keypoint_id = keypoint_ids[k]
+    if keypoint_id not in lst:
+      lst[keypoint_id] = []
+    lst[keypoint_id].append(k)
+
+  remapper = {}
+  num_bad = 0
+  keypoint_counter = 0
+  for l, v in lst.items():
+    check = {}
+    bad = False
+    for kp in v:
+      if kp[0] in check:
+        bad = True
+        break
+      check[kp[0]] = 1
+    if bad:
+      num_bad += 1
+      remapper[l] = -1
+    else:
+      remapper[l] = keypoint_counter
+      keypoint_counter += 1
+
+  print("Removing", num_bad)
+  print("Good track", keypoint_counter)
 
   for k in edges:
     img_id = k[0]
-    keypoint_id = keypoint_ids[k]
+    keypoint_id = remapper[keypoint_ids[k]]
+    if keypoint_id == -1: continue
     point2d.append({
       'image_id': img_id,
       'camera_id': camera_lookup[img_id],
@@ -288,7 +324,7 @@ def database_reader2(database_path,image_dir = ''):
       'color':  [255,255,255]
     })
 
-  print("done")
+  print("Done")
   print(keypoint_counter)
   return (point2d, intrinsic, extrinsic, point3d)
 
