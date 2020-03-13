@@ -232,7 +232,6 @@ def database_reader_bfs(database_path,image_dir = ''):
       'params': params
     })
 
-  print(sys.getrecursionlimit())
   print("Creating graph")
   edges = {}
   cc = 0
@@ -267,7 +266,7 @@ def database_reader_bfs(database_path,image_dir = ''):
     q.append(node)
     keypoint_ids[node] = keypoint_counter
     while q:
-      node = q.pop()
+      node = q.popleft()
       for nnode in edges[node]:
         if nnode not in keypoint_ids:
           keypoint_ids[nnode] = keypoint_counter
