@@ -9,14 +9,12 @@ from collections import deque
 
 def binary_reader(binary_path):
     cameras, images, points3d = read_model(binary_path,'.bin')
-    
     point2d = []
     instrinsic = []
     extrinsic = []
     point3d = []
     
     #filter only useful point3d data
-    point_len = 0
     for point_id in points3d:
         pid, xyz, rgb, err, img_ids, kpt_ids = points3d[point_id]
         point3d.append({
@@ -53,8 +51,7 @@ def binary_reader(binary_path):
                     'point3d_id': point3d_ids[i],
                     'position': xys[i]
                 })
-        
-
+              
     return (point2d, instrinsic, extrinsic, point3d)
 
 def database_reader_bfs(database_path,image_dir = '', shift_point3d = [0,0,0]):
@@ -106,10 +103,14 @@ def database_reader_bfs(database_path,image_dir = '', shift_point3d = [0,0,0]):
   edges = {}
   cc = 0
   for match_record in matches_data:
+    cc += 1
+    if cc % 1000 == 0:
+      print('%.2f%%' % (cc / len(matches_data) * 100))
     image_from, image_to = pair_id_to_image_ids(match_record[0])
     image_from = int(image_from)
     image_to = int(image_to)
-    if match_record[1] == 0: continue
+    if match_record[1] == 0:
+      continue
 
     lookup = blob_to_array(match_record[3], np.int32, (match_record[1], match_record[2]))
     for pair in lookup:
@@ -120,11 +121,7 @@ def database_reader_bfs(database_path,image_dir = '', shift_point3d = [0,0,0]):
       if k1 not in edges: edges[k1] = []
 
       edges[k0].append(k1)
-      edges[k1].append(k0)
-
-    cc += 1
-    if cc % 1000 == 0:
-      print('%.2f%%' % (cc / len(matches_data) * 100))
+      edges[k1].append(k0)   
 
 
   keypoint_counter = 0
