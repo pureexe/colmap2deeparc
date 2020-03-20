@@ -9,10 +9,19 @@ def main(args):
     if detect_database(args.input):
         # if input is database file do read database
         print("reading database")
-        colmap_data = database_reader_bfs(args.input,args.image_dir, shift_point3d=[0.0,0.0,0.0])
+        print(args)
+        colmap_data = database_reader_bfs(
+            args.input,
+            args.image_dir,
+            shift_point3d=[
+                args.shift_point3d_x,
+                args.shift_point3d_y,
+                args.shift_point3d_z
+            ]
+        )
         if 'reference_camera_pose' in args and len(args.reference_camera_pose)> 0:
             print("use reference")
-            filetype = '.bin' if detect_model(args.input,filetype='.bin') else '.txt'
+            filetype = '.bin' if detect_model(args.reference_camera_pose,filetype='.bin') else '.txt'
             reference_data = binary_reader(args.reference_camera_pose, filetype)
             new_colmap_data = (colmap_data[0],reference_data[1],reference_data[2],colmap_data[3])
             colmap_data = new_colmap_data
@@ -55,4 +64,25 @@ if __name__ == '__main__':
         default='',
         help='image directory for get pixel info'
     )
+    parser.add_argument(
+        '-sx',
+        '--shift-point3d-x',
+        type=float,
+        default=0.0,
+        help='shift point3d in x axis (only using .db as input)'
+    )
+    parser.add_argument(
+        '-sy',
+        '--shift-point3d-y',
+        type=float,
+        default=0.0,
+        help='shift point3d in y axis (only using .db as input)'
+    )
+    parser.add_argument(
+        '-sz',
+        '--shift-point3d-z',
+        type=float,
+        default=0.0,
+        help='shift point3d in z axis (only using .db as input)'
+    )    
     main(parser.parse_args())
