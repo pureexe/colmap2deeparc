@@ -12,7 +12,8 @@ def main(args):
         colmap_data = database_reader_bfs(args.input,args.image_dir, shift_point3d=[0.0,0.0,0.0])
         if 'reference_camera_pose' in args and len(args.reference_camera_pose)> 0:
             print("use reference")
-            reference_data = binary_reader(args.reference_camera_pose)
+            filetype = '.bin' if detect_model(args.input,filetype='.bin') else '.txt'
+            reference_data = binary_reader(args.reference_camera_pose, filetype)
             new_colmap_data = (colmap_data[0],reference_data[1],reference_data[2],colmap_data[3])
             colmap_data = new_colmap_data
     elif detect_model(args.input,filetype='.bin'):
