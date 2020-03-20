@@ -32,30 +32,26 @@ if __name__ == '__main__':
         '-i',
         '--input',
         type=str,
-        # required=True,
-        default='D:/Datasets/teabottle_green/teabottle_green_2.db',
+        required=True,
         help='colmap model directory / colmap database file (.db)',
     )
     parser.add_argument(
         '-o',
         '--output',
         type=str,
-        # required=True,
-        default='teabottle_green_bfs.deeparc',
+        required=True,
         help='deeparch file output')
     parser.add_argument(
         '-r',
         '--reference-camera-pose',
         type=str,
-        # required=True,
-        default='D:/Datasets/teabottle_green/undistrort/sparse/',
-        #default='',
+        default='',
         help='reference camera pose model')
     parser.add_argument(
         '-d',
         '--image_dir',
         type=str,
-        default='D:/Datasets/teabottle_green/images',
+        default='',
         help='image directory for get pixel info'
     )
     main(parser.parse_args())
