@@ -15,9 +15,10 @@ def main(args):
             reference_data = binary_reader(args.reference_camera_pose)
             new_colmap_data = (colmap_data[0],reference_data[1],reference_data[2],colmap_data[3])
             colmap_data = new_colmap_data
-    elif detect_model(args.input):
-        # if input is model do binary read
-        colmap_data = binary_reader(args.input)
+    elif detect_model(args.input,filetype='.bin'):
+        colmap_data = binary_reader(args.input,,filetype='.bin'))
+    elif detect_model(args.input,filetype='.txt'):
+        colmap_data = binary_reader(args.input,,filetype='.txt'))
     else:
         raise RuntimeError(
             'input isn\'t valid colmap model (.bin) directory or database(.db)'

@@ -7,8 +7,8 @@ import sqlite3
 import sys
 from collections import deque
 
-def binary_reader(binary_path):
-    cameras, images, points3d = read_model(binary_path,'.bin')
+def binary_reader(binary_path,filetype='.bin'):
+    cameras, images, points3d = read_model(binary_path,filetype)
     point2d = []
     instrinsic = []
     extrinsic = []
@@ -318,15 +318,15 @@ def detect_database(database_path):
         return False
     return True
 
-def detect_model(model_path):
+def detect_model(model_path,filetype = '.bin'):
     """ 
         detect is this colmap model directory by detect 3 files
         which is cameras.bin images.bin and points3D.bin
     """
     paths = [
-        os.path.join(model_path,'cameras.bin'),
-        os.path.join(model_path,'images.bin'),
-        os.path.join(model_path,'points3D.bin'),
+        os.path.join(model_path,'cameras{}'.format(filetype)),
+        os.path.join(model_path,'images{}'.format(filetype)),
+        os.path.join(model_path,'points3D{}'.format(filetype)),
     ]
     for path in paths:
         if not os.path.exists(path):
