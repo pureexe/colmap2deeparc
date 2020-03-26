@@ -6,6 +6,7 @@ from deeparch.reader import database_reader_bfs, binary_reader, \
 
 def main(args):
     colmap_data = {}
+    reference_data = None
     if detect_database(args.input):
         # if input is database file do read database
         print("reading database")
@@ -23,8 +24,7 @@ def main(args):
             print("use reference")
             filetype = '.bin' if detect_model(args.reference_camera_pose,filetype='.bin') else '.txt'
             reference_data = binary_reader(args.reference_camera_pose, filetype)
-            new_colmap_data = (colmap_data[0],reference_data[1],reference_data[2],colmap_data[3])
-            colmap_data = new_colmap_data
+
     elif detect_model(args.input,filetype='.bin'):
         colmap_data = binary_reader(args.input,filetype='.bin')
     elif detect_model(args.input,filetype='.txt'):
@@ -33,7 +33,7 @@ def main(args):
         raise RuntimeError(
             'input isn\'t valid colmap model (.bin) directory or database(.db)'
         )
-    write_file(args.output,colmap_data)
+    write_file(args.output,colmap_data,reference_data)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

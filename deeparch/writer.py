@@ -1,44 +1,6 @@
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-def instrinsic_builder(intrisics):
-    model = intrisics['model']
-    params = intrisics['params']
-    params.astype(np.float32)
-    if model == 'SIMPLE_PINHOLE':
-        return '{:f} {:f} 1 {:f} 0\n'.format(
-            params[1],
-            params[2],
-            params[0],
-        )
-    elif model == 'PINHOLE':
-        return "{:f} {:f} 2 {:f} {:f} 0\n".format(
-            params[2],
-            params[3],
-            params[0],
-            params[1],
-        )
-    elif model == 'SIMPLE_RADIAL':
-        return '{:f} {:f} 1 {:f} 1 {:f}\n'.format(
-            params[1],
-            params[2],
-            params[0],
-            params[3] 
-        )
-    elif model == 'RADIAL':
-        return '{:f} {:f} 1 {:f} 2 {:f} {:f}\n' [
-            params[1],
-            params[2],
-            params[0],
-            params[3],
-            params[4]
-        ]
-    else:
-        raise RuntimeError(
-            'Camera number {} using {} which is currently not support'
-                .format(intrisics['id'], model)
-        )
-
 def detect_share_extrinsic(extrinsics):
     if 'name' in extrinsics[0] and extrinsics[0]['name'][:3] == 'cam':
         return True
@@ -61,12 +23,15 @@ def get_extrinsic_layout(extrinsics):
     #index start from 0 so we need +1
     return max_row + 1, max_col + 1
 
-# ขโมย base เฉลี่ย คูณ inverse ของ base บริเวณ arc
-# วิธีแปลง 0,0 เป็น identity ด้วย inverse
-
 def write_instrinsic(f, intrinsics):
     for intrinsic in intrinsics:
-        f.write(instrinsic_builder(intrinsic))
+        params = intrinsic['params']
+        f.write('{:f} {:f} 1 {:f} 1 {:f}\n'.format(
+            params[1],
+            params[2],
+            params[0],
+            params[3] 
+        ))
 
 def write_point3d(f, point3ds):
     for point3d in point3ds:
@@ -101,15 +66,20 @@ def write_extrinsic_with_inv(f, extrinsic,refcam_inv):
     ))
 
 
-def write_file(output_path, data):
+def write_file(output_path, data, reference_model = None):
     api_version = 0.01
     point2ds, intrinsics, extrinsics, point3ds = data
-    share_extrinsic = detect_share_extrinsic(extrinsics)
+
+    if reference_model is not None:
+        extrinsics_for_point2d = extrinsics
+        _, intrinsics, extrinsics, _ = reference_model
+    else:
+        extrinsics_for_point2d = extrinsics
 
     max_row = len(extrinsics)
     max_col = 0
-    if share_extrinsic:
-        max_row, max_col = get_extrinsic_layout(extrinsics)
+    max_row, max_col = get_extrinsic_layout(extrinsics)
+    
     with open(output_path,'w') as f:
         f.write('{:f}\n'.format(api_version)) #version at head
         #print file number
@@ -129,73 +99,48 @@ def write_file(output_path, data):
             point3d_ids[point3d['id']] = point3d_count
             point3d_count = point3d_count + 1
 
-        if share_extrinsic:
-            # get row and column from image name 
-            image_rc = {}
-            for image in extrinsics:
-                r,c = position_from_image_name(image['name'])
-                image_rc[image['id']] = [r,c]
-            for point2d in point2ds:
-                point2d['rc'] = image_rc[point2d['image_id']]
-            for point2d in point2ds:
-                x,y = point2d['position']
-                r,c = point2d['rc']
-                f.write('{:d} {:d} {:d} {:f} {:f}\n'.format(
-                    int(r),
-                    int(c),
-                    int(point3d_ids[point2d['point3d_id']]),
-                    float(x),
-                    float(y)
-                ))
-            write_instrinsic(f,intrinsics)
-            # sort extrinsic first
-            extrinsic_row = {}
-            extrinsic_col = {}
-            for extrinsic in extrinsics:
-                r,c = image_rc[extrinsic['id']]
-                # extrinsic of arc
-                if c == 0:
-                    extrinsic_row[r] = extrinsic
-                # extrinsic of base
-                if r == 0 and c != 0:
-                    extrinsic_col[c] = extrinsic
-            #origin rotation need to be Identity for compose
-            refcam_mat = camera_matrix(extrinsic_row[0])
-            refcam_inv = np.linalg.inv(refcam_mat)
+        # get row and column from image name 
+        image_rc = {}
+        for image in extrinsics_for_point2d:
+            r,c = position_from_image_name(image['name'])
+            image_rc[image['id']] = [r,c]
+        for point2d in point2ds:
+            point2d['rc'] = image_rc[point2d['image_id']]
+        for point2d in point2ds:
+            x,y = point2d['position']
+            r,c = point2d['rc']
+            f.write('{:d} {:d} {:d} {:f} {:f}\n'.format(
+                int(r),
+                int(c),
+                int(point3d_ids[point2d['point3d_id']]),
+                float(x),
+                float(y)
+            ))
+        write_instrinsic(f,intrinsics)
+        # sort extrinsic first
+        extrinsic_row = {}
+        extrinsic_col = {}
+        for extrinsic in extrinsics:
+            r,c = position_from_image_name(extrinsic['name'])
+            # extrinsic of arc
+            if c == 0:
+                extrinsic_row[r] = extrinsic
+            # extrinsic of base
+            if r == 0 and c != 0:
+                extrinsic_col[c] = extrinsic
+        #origin rotation need to be Identity for compose
+        refcam_mat = camera_matrix(extrinsic_row[0])
+        refcam_inv = np.linalg.inv(refcam_mat)
 
-            # apply rotation from refcam to all 3d point
-            current_point = np.ones((4,1))
-            for i in range(len(point3ds)):
-                current_point[:3,0] = point3ds[i]['position']
-                transform_point = np.matmul(refcam_mat,current_point)
-                point3ds[i]['position'] = transform_point[:3,0]
+        # apply rotation from refcam to all 3d point
+        current_point = np.ones((4,1))
+        for i in range(len(point3ds)):
+            current_point[:3,0] = point3ds[i]['position']
+            transform_point = np.matmul(refcam_mat,current_point)
+            point3ds[i]['position'] = transform_point[:3,0]
 
-            for i in range(max_row):
-                write_extrinsic_with_inv(f, extrinsic_row[i], refcam_inv)
-            for i in range(1,max_col):
-                write_extrinsic_with_inv(f, extrinsic_col[i], refcam_inv)
-        else:
-            for point2d in point2ds:
-                x,y = point2d['position']
-                f.write('{:d} {:d} {:d} {:f} {:f}\n'.format(
-                    int(point2d['camera_id'] - 1), #index start from 0
-                    int(point2d['image_id'] - 1),
-                    int(point3d_ids[point2d['point3d_id']]),
-                    float(x),
-                    float(y)
-                ))
-            write_instrinsic(f,intrinsics)
-            for extrinsic in extrinsics:
-                tvec = extrinsic['translation']
-                qvec = extrinsic['rotation']
-                rotation = Rotation.from_quat([qvec[1],qvec[2],qvec[3],qvec[0]])
-                rotvec = rotation.as_rotvec()
-                f.write('{:f} {:f} {:f} 3 {:f} {:f} {:f}\n'.format(
-                    tvec[0],
-                    tvec[1],
-                    tvec[2],
-                    rotvec[0],
-                    rotvec[1],
-                    rotvec[2]
-                ))
+        for i in range(max_row):
+            write_extrinsic_with_inv(f, extrinsic_row[i], refcam_inv)
+        for i in range(1,max_col):
+            write_extrinsic_with_inv(f, extrinsic_col[i], refcam_inv)
         write_point3d(f, point3ds)
