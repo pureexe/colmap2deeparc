@@ -39,9 +39,9 @@ def instrinsic_builder(intrisics):
                 .format(intrisics['id'], model)
         )
 
-def detech_share_extrinsic(extrinsics):
+def detect_share_extrinsic(extrinsics):
     if 'name' in extrinsics[0] and extrinsics[0]['name'][:3] == 'cam':
-        return True 
+        return True
     return False
 
 def position_from_image_name(image_name):
@@ -104,11 +104,12 @@ def write_extrinsic_with_inv(f, extrinsic,refcam_inv):
 def write_file(output_path, data):
     api_version = 0.01
     point2ds, intrinsics, extrinsics, point3ds = data
-    share_extrinsic = detech_share_extrinsic(extrinsics) 
+    share_extrinsic = detect_share_extrinsic(extrinsics)
+
     max_row = len(extrinsics)
     max_col = 0
     if share_extrinsic:
-        max_row, max_col = get_extrinsic_layout(extrinsics)        
+        max_row, max_col = get_extrinsic_layout(extrinsics)
     with open(output_path,'w') as f:
         f.write('{:f}\n'.format(api_version)) #version at head
         #print file number
@@ -127,7 +128,7 @@ def write_file(output_path, data):
         for point3d in point3ds:
             point3d_ids[point3d['id']] = point3d_count
             point3d_count = point3d_count + 1
-            
+
         if share_extrinsic:
             # get row and column from image name 
             image_rc = {}
@@ -158,7 +159,6 @@ def write_file(output_path, data):
                 # extrinsic of base
                 if r == 0 and c != 0:
                     extrinsic_col[c] = extrinsic
-            
             #origin rotation need to be Identity for compose
             refcam_mat = camera_matrix(extrinsic_row[0])
             refcam_inv = np.linalg.inv(refcam_mat)
@@ -172,10 +172,8 @@ def write_file(output_path, data):
 
             for i in range(max_row):
                 write_extrinsic_with_inv(f, extrinsic_row[i], refcam_inv)
-                
             for i in range(1,max_col):
-                write_extrinsic_with_inv(f, extrinsic_col[i], refcam_inv)    
-            
+                write_extrinsic_with_inv(f, extrinsic_col[i], refcam_inv)
         else:
             for point2d in point2ds:
                 x,y = point2d['position']
@@ -201,4 +199,3 @@ def write_file(output_path, data):
                     rotvec[2]
                 ))
         write_point3d(f, point3ds)
-        

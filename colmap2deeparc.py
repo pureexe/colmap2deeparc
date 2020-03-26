@@ -55,7 +55,7 @@ if __name__ == '__main__':
         '-r',
         '--reference-camera-pose',
         type=str,
-        default='',
+        default='texture_box_model_with_distortion',
         help='reference camera pose model')
     parser.add_argument(
         '-d',

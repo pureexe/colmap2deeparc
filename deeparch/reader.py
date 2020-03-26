@@ -98,10 +98,11 @@ def database_reader_bfs(database_path,image_dir = '', shift_point3d = [0,0,0]):
       'params': params
     })
 
-  print(sys.getrecursionlimit())
   print("Creating graph")
   edges = {}
   cc = 0
+
+  # debug = {}
   for match_record in matches_data:
     cc += 1
     if cc % 1000 == 0:
@@ -121,8 +122,21 @@ def database_reader_bfs(database_path,image_dir = '', shift_point3d = [0,0,0]):
       if k1 not in edges: edges[k1] = []
 
       edges[k0].append(k1)
-      edges[k1].append(k0)   
+      edges[k1].append(k0)
 
+      # if k0 not in debug: debug[k0] = {}
+      # if k1 not in debug: debug[k1] = {}
+      # debug[k0][k1] = 1
+      # debug[k1][k0] = 1
+
+
+  # for key in debug:
+    # for p in debug[key]:
+      # if key not in debug[p]:
+        # print("error\n")
+        # exit()
+  # print("pass")
+  # exit()
 
   keypoint_counter = 0
   keypoint_ids = {}
