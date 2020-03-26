@@ -11,7 +11,9 @@ def main(args):
         print("reading database")
         colmap_data = database_reader_bfs(args.input,args.image_dir)
         # colmap_data = database_reader_dset(args.input,args.image_dir)
-        if 'reference_camera_pose' in args and len(args.reference_camera_pose > 0):
+
+        print(args)
+        if 'reference_camera_pose' in args and len(args.reference_camera_pose) > 0:
             print("use reference")
             reference_data = binary_reader(args.reference_camera_pose)
             new_colmap_data = (colmap_data[0],reference_data[1],reference_data[2],colmap_data[3])
@@ -34,7 +36,8 @@ if __name__ == '__main__':
         '--input',
         type=str,
         # required=True,
-        default='teabottle_green_2.db',
+        # default='teabottle_green_2_small.db',
+        default='./teabottle_custom_matching.db',
         help='colmap model directory / colmap database file (.db)',
     )
     parser.add_argument(
@@ -42,7 +45,7 @@ if __name__ == '__main__':
         '--output',
         type=str,
         # required=True,
-        default='teabottle_green_random_init.deeparc',
+        default='teabottle_custom_matching.deeparc',
         help='deeparch file output')
     parser.add_argument(
         '-r',
@@ -50,7 +53,7 @@ if __name__ == '__main__':
         type=str,
         # required=True,
         #default='D:/Datasets/teabottle_green/undistrort',
-        default='',
+        default='teabottle_sparse_model',
         help='reference camera pose model')
     parser.add_argument(
         '-d',

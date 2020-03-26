@@ -23,7 +23,7 @@ def instrinsic_builder(intrisics):
             params[1],
             params[2],
             params[0],
-            params[3] 
+            params[3]
         )
     elif model == 'RADIAL':
         return '{:f} {:f} 1 {:f} 2 {:f} {:f}\n' [
@@ -104,11 +104,11 @@ def write_extrinsic_with_inv(f, extrinsic,refcam_inv):
 def write_file(output_path, data):
     api_version = 0.01
     point2ds, intrinsics, extrinsics, point3ds = data
-    share_extrinsic = detech_share_extrinsic(extrinsics) 
+    share_extrinsic = detech_share_extrinsic(extrinsics)
     max_row = len(extrinsics)
     max_col = 0
     if share_extrinsic:
-        max_row, max_col = get_extrinsic_layout(extrinsics)        
+        max_row, max_col = get_extrinsic_layout(extrinsics)
     with open(output_path,'w') as f:
         f.write('{:f}\n'.format(api_version)) #version at head
         #print file number
@@ -127,15 +127,17 @@ def write_file(output_path, data):
         for point3d in point3ds:
             point3d_ids[point3d['id']] = point3d_count
             point3d_count = point3d_count + 1
-            
+
         if share_extrinsic:
             # get row and column from image name 
             image_rc = {}
             for image in extrinsics:
                 r,c = position_from_image_name(image['name'])
                 image_rc[image['id']] = [r,c]
+
             for point2d in point2ds:
                 point2d['rc'] = image_rc[point2d['image_id']]
+
             for point2d in point2ds:
                 x,y = point2d['position']
                 r,c = point2d['rc']
@@ -147,9 +149,11 @@ def write_file(output_path, data):
                     float(y)
                 ))
             write_instrinsic(f,intrinsics)
+
             # sort extrinsic first
             extrinsic_row = {}
             extrinsic_col = {}
+            print(len(extrinsics))
             for extrinsic in extrinsics:
                 r,c = image_rc[extrinsic['id']]
                 # extrinsic of arc
@@ -158,7 +162,7 @@ def write_file(output_path, data):
                 # extrinsic of base
                 if r == 0 and c != 0:
                     extrinsic_col[c] = extrinsic
-            
+
             #origin rotation need to be Identity for compose
             refcam_mat = camera_matrix(extrinsic_row[0])
             refcam_inv = np.linalg.inv(refcam_mat)
@@ -172,10 +176,8 @@ def write_file(output_path, data):
 
             for i in range(max_row):
                 write_extrinsic_with_inv(f, extrinsic_row[i], refcam_inv)
-                
             for i in range(1,max_col):
-                write_extrinsic_with_inv(f, extrinsic_col[i], refcam_inv)    
-            
+                write_extrinsic_with_inv(f, extrinsic_col[i], refcam_inv)
         else:
             for point2d in point2ds:
                 x,y = point2d['position']
@@ -201,4 +203,3 @@ def write_file(output_path, data):
                     rotvec[2]
                 ))
         write_point3d(f, point3ds)
-        

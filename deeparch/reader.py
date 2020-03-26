@@ -10,184 +10,50 @@ from collections import deque
 
 
 def binary_reader(binary_path):
-    cameras, images, points3d = read_model(binary_path,'.bin')
-    
-    point2d = []
-    instrinsic = []
-    extrinsic = []
-    point3d = []
-    
-    #filter only useful point3d data
-    point_len = 0
-    for point_id in points3d:
-        pid, xyz, rgb, err, img_ids, kpt_ids = points3d[point_id]
-        point3d.append({
-            'id': pid,
-            'position': xyz,
-            'color': rgb
-        })
-
-    #filter only useful instrinsic data
-    for cam_id in cameras:
-        cid, model, w, h, params = cameras[cam_id]
-        instrinsic.append({
-            'id': cid, 
-            'model': model,
-            'params': params
-        })
-    
-    for image_id in images:
-        img_id, qvec, tvec, camera_id, name, xys, point3d_ids = images[image_id]
-        # filter only useful extrinsic data
-        extrinsic.append({
-            'id': img_id,
-            'name': name,
-            'rotation': qvec,
-            'translation': tvec
-        })
-        # filter only useful point2d data
-        for i in range(len(xys)):
-            if point3d_ids[i] != -1:
-                x,y = xys[i]
-                point2d.append({
-                    'image_id': img_id,
-                    'camera_id': camera_id,
-                    'point3d_id': point3d_ids[i],
-                    'position': xys[i]
-                })
-
-    return (point2d, instrinsic, extrinsic, point3d)
-
-def database_reader_dset(database_path,image_dir = ''):
-  db = COLMAPDatabase.connect(database_path)
-  c = db.cursor()
-  c.execute('SELECT camera_id,model,params FROM cameras')
-  cameras_data = c.fetchall()
-  c.execute('SELECT image_id,camera_id FROM images')
-  images_data = c.fetchall()
-  c.execute("SELECT pair_id,rows,cols,data FROM matches")
-  matches_data = c.fetchall()
-  c.execute("SELECT image_id,rows,cols,data FROM keypoints")
-  keypoints_data = c.fetchall()
-  db.close()
-
-  keypoints = {}
+  cameras, images, points3d = read_model(binary_path,'.bin')
+  point2d = []
   intrinsic = []
   extrinsic = []
-  point2d = []
   point3d = []
-
-  print("building keypoint search")
-  for keypoint_image in keypoints_data:
-    img_id, r, c, data = keypoint_image
-    kpt = blob_to_array(data, np.float32,(r,c))
-    keypoints[img_id] = kpt[:, :2]
-
-  camera_lookup = {}
-  for image in images_data:
-    image_id, camera_id = image
-    extrinsic.append({
-      'id': image_id,
-      'rotation': np.random.normal(size=4),
-      'translation': np.random.normal(size=3)
-    })
-    camera_lookup[image_id] = camera_id
-
-  for camera in cameras_data:
-    camera_id, model, params = camera
-    params = blob_to_array(params, np.float64)
-    intrinsic.append({
-      'id': camera_id,
-      'model': CAMERA_MODEL_IDS[model][1],
-      'params': params
-    })
-
-  dset = {}
-  print("creating disjoint set")
-  cc = 0
-  for match_record in matches_data:
-    image_from, image_to = pair_id_to_image_ids(match_record[0])
-    image_from = int(image_from)
-    image_to = int(image_to)
-    if match_record[1] == 0: continue
-
-    lookup = blob_to_array(match_record[3], np.int32, (match_record[1], match_record[2]))
-    for pair in lookup:
-      k0 = (image_from, pair[0])
-      k1 = (image_to, pair[1])
-
-      if k0 in dset and k1 in dset: # par(k0) -> par(k1)
-        tmp = []
-        while dset[k1] != k1:
-          tmp.append(k1)
-          k1 = dset[k1]
-        for t in tmp:
-          dset[t] = k1
-
-        while dset[k0] != k0:
-          old = k0
-          k0 = dset[k0]
-          dset[old] = k1
-
-        dset[k0] = k1
-
-      elif k0 not in dset and k1 not in dset:
-        dset[k0] = dset[k1] = k1
-      elif k0 in dset and k1 not in dset:
-        dset[k1] = k0
-      else:
-        dset[k0] = k1
-
-    cc += 1
-    if cc % 1000 == 0:
-      print('%.2f%%' % (cc / len(matches_data) * 100))
-
-
-  keypoint_counter = 0
-  for k, v in dset.items():
-    if k == v:
-      dset[k] = keypoint_counter
-      keypoint_counter += 1
-
-  lst = {}
-
-  for k, v in dset.items():
-    while type(v) == tuple:
-      v = dset[v]
-
-    img_id, keypoint_id = k[0], v
-    if keypoint_id not in lst:
-      lst[keypoint_id] = []
-    lst[keypoint_id].append(k)
-
-    point2d.append({
-      'image_id': img_id,
-      'camera_id': camera_lookup[img_id],
-      'point3d_id': keypoint_id,
-      'position': keypoints[img_id]
-    })
+  #filter only useful point3d data
+  point_len = 0
+  for point_id in points3d:
+    pid, xyz, rgb, err, img_ids, kpt_ids = points3d[point_id]
     point3d.append({
-      'id': keypoint_id,
-      'position': list(np.random.normal(0,0.1,3)),
-      'color':  [255,255,255]
+        'id': pid,
+        'position': xyz,
+        'color': rgb
     })
 
-  sizes = [len(lst[g]) for g in lst]
-  sizes.sort()
-  print("size max", max(sizes))
-  for g in lst:
-    if len(lst[g]) == 1308076:
-      # print(lst[g])
-      print("still found", g)
+  #filter only useful intrinsic data
+  for cam_id in cameras:
+    cid, model, w, h, params = cameras[cam_id]
+    intrinsic.append({
+        'id': cid,
+        'model': model,
+        'params': params
+    })
+  for image_id in images:
+    img_id, qvec, tvec, camera_id, name, xys, point3d_ids = images[image_id]
+    extrinsic.append({
+      'id': img_id,
+      'name': name,
+      'rotation': qvec,
+      'translation': tvec
+    })
+  # filter only useful point2d data
+  for i in range(len(xys)):
+    if point3d_ids[i] != -1:
+      x,y = xys[i]
+      point2d.append({
+        'image_id': img_id,
+        'camera_id': camera_id,
+        'point3d_id': point3d_ids[i],
+        'position': xys[i]
+      })
 
-  print(sizes)
-  print("done")
-  print(len(point2d))
-  print(len(dset))
-  print(keypoint_counter)
-
-  exit()
   return (point2d, intrinsic, extrinsic, point3d)
+
 def database_reader_bfs(database_path,image_dir = ''):
   db = COLMAPDatabase.connect(database_path)
   c = db.cursor()
@@ -195,7 +61,7 @@ def database_reader_bfs(database_path,image_dir = ''):
   cameras_data = c.fetchall()
   c.execute('SELECT image_id,camera_id FROM images')
   images_data = c.fetchall()
-  c.execute("SELECT pair_id,rows,cols,data FROM matches")
+  c.execute("SELECT pair_id,rows,cols,data FROM two_view_geometries")
   matches_data = c.fetchall()
   c.execute("SELECT image_id,rows,cols,data FROM keypoints")
   keypoints_data = c.fetchall()
@@ -212,6 +78,8 @@ def database_reader_bfs(database_path,image_dir = ''):
     img_id, r, c, data = keypoint_image
     kpt = blob_to_array(data, np.float32,(r,c))
     keypoints[img_id] = kpt[:, :2]
+    print(kpt.shape)
+
 
   camera_lookup = {}
   for image in images_data:
@@ -455,7 +323,7 @@ def detect_database(database_path):
     return True
 
 def detect_model(model_path):
-    """ 
+    """
         detect is this colmap model directory by detect 3 files
         which is cameras.bin images.bin and points3D.bin
     """
@@ -468,3 +336,134 @@ def detect_model(model_path):
         if not os.path.exists(path):
             return False
     return True
+
+def database_reader_dset(database_path,image_dir = ''):
+  db = COLMAPDatabase.connect(database_path)
+  c = db.cursor()
+  c.execute('SELECT camera_id,model,params FROM cameras')
+  cameras_data = c.fetchall()
+  c.execute('SELECT image_id,camera_id FROM images')
+  images_data = c.fetchall()
+  c.execute("SELECT pair_id,rows,cols,data FROM matches")
+  matches_data = c.fetchall()
+  c.execute("SELECT image_id,rows,cols,data FROM keypoints")
+  keypoints_data = c.fetchall()
+  db.close()
+
+  keypoints = {}
+  intrinsic = []
+  extrinsic = []
+  point2d = []
+  point3d = []
+
+  print("building keypoint search")
+  for keypoint_image in keypoints_data:
+    img_id, r, c, data = keypoint_image
+    kpt = blob_to_array(data, np.float32,(r,c))
+    keypoints[img_id] = kpt[:, :2]
+
+  camera_lookup = {}
+  for image in images_data:
+    image_id, camera_id = image
+    extrinsic.append({
+      'id': image_id,
+      'rotation': np.random.normal(size=4),
+      'translation': np.random.normal(size=3)
+    })
+    camera_lookup[image_id] = camera_id
+
+  for camera in cameras_data:
+    camera_id, model, params = camera
+    params = blob_to_array(params, np.float64)
+    intrinsic.append({
+      'id': camera_id,
+      'model': CAMERA_MODEL_IDS[model][1],
+      'params': params
+    })
+
+  dset = {}
+  print("creating disjoint set")
+  cc = 0
+  for match_record in matches_data:
+    image_from, image_to = pair_id_to_image_ids(match_record[0])
+    image_from = int(image_from)
+    image_to = int(image_to)
+    if match_record[1] == 0: continue
+
+    lookup = blob_to_array(match_record[3], np.int32, (match_record[1], match_record[2]))
+    for pair in lookup:
+      k0 = (image_from, pair[0])
+      k1 = (image_to, pair[1])
+
+      if k0 in dset and k1 in dset: # par(k0) -> par(k1)
+        tmp = []
+        while dset[k1] != k1:
+          tmp.append(k1)
+          k1 = dset[k1]
+        for t in tmp:
+          dset[t] = k1
+
+        while dset[k0] != k0:
+          old = k0
+          k0 = dset[k0]
+          dset[old] = k1
+
+        dset[k0] = k1
+
+      elif k0 not in dset and k1 not in dset:
+        dset[k0] = dset[k1] = k1
+      elif k0 in dset and k1 not in dset:
+        dset[k1] = k0
+      else:
+        dset[k0] = k1
+
+    cc += 1
+    if cc % 1000 == 0:
+      print('%.2f%%' % (cc / len(matches_data) * 100))
+
+
+  keypoint_counter = 0
+  for k, v in dset.items():
+    if k == v:
+      dset[k] = keypoint_counter
+      keypoint_counter += 1
+
+  lst = {}
+
+  for k, v in dset.items():
+    while type(v) == tuple:
+      v = dset[v]
+
+    img_id, keypoint_id = k[0], v
+    if keypoint_id not in lst:
+      lst[keypoint_id] = []
+    lst[keypoint_id].append(k)
+
+    point2d.append({
+      'image_id': img_id,
+      'camera_id': camera_lookup[img_id],
+      'point3d_id': keypoint_id,
+      'position': keypoints[img_id]
+    })
+    point3d.append({
+      'id': keypoint_id,
+      'position': list(np.random.normal(0,0.1,3)),
+      'color':  [255,255,255]
+    })
+
+  sizes = [len(lst[g]) for g in lst]
+  sizes.sort()
+  print("size max", max(sizes))
+  for g in lst:
+    if len(lst[g]) == 1308076:
+      # print(lst[g])
+      print("still found", g)
+
+  print(sizes)
+  print("done")
+  print(len(point2d))
+  print(len(dset))
+  print(keypoint_counter)
+
+  exit()
+  return (point2d, intrinsic, extrinsic, point3d)
