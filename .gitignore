@@ -1,3 +1,5 @@
 
 *.pyc
 *.deeparc
+test_plot.py
+test_plot_db.py
