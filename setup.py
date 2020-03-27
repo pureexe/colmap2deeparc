@@ -8,7 +8,8 @@ setuptools.setup(
     author_email="pakkapon.p_s19@vistec.ac.th",
     description="create deeparc file from colmap db",
     url="https://github.com/pureexe/colmap2deeparc",
-    packages=setuptools.find_packages(),
+    packages=['tests','deeparc','colmap'],
+    py_modules=['colmap2deeparc'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
