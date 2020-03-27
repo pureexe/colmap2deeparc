@@ -1,5 +1,5 @@
 import os
-from deeparch.reader import detect_model, detect_database
+from deeparc.reader import detect_model, detect_database
 def test_detect_model_failed_case(tmpdir):
     assert detect_model(tmpdir) == False
 

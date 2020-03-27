@@ -1,7 +1,7 @@
-# colmap to deeparch format
+# colmap to  format
 import argparse
-from deeparch.writer import write_file
-from deeparch.reader import database_reader_bfs, binary_reader, \
+from deeparc.writer import write_file
+from deeparc.reader import database_reader_bfs, binary_reader, \
     detect_model, detect_database
 
 def main(args):
@@ -10,7 +10,6 @@ def main(args):
     if detect_database(args.input):
         # if input is database file do read database
         print("reading database")
-        print(args)
         colmap_data = database_reader_bfs(
             args.input,
             args.image_dir,
@@ -37,7 +36,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='colmap2deeparc.py - convert colmap into deeparch format')
+        description='colmap2deeparc.py - convert colmap into deeparc format')
     parser.add_argument(
         '-i',
         '--input',
@@ -50,7 +49,7 @@ if __name__ == '__main__':
         '--output',
         type=str,
         required=True,
-        help='deeparch file output')
+        help='deeparc file output')
     parser.add_argument(
         '-r',
         '--reference-camera-pose',
