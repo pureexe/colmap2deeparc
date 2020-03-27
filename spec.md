@@ -3,7 +3,7 @@
 ## file structure
 
 ```
-<deeparch_version> 
+<deeparc_version> 
 <number_point2d> <number_instrinsic> <number_extrinsic_on_arc> <number_extrinsic_on_ring> <number_point3d>
 <instrinsic_id_1/position_on_arc> <extrinsic_id_1/position_on_ring> <point3d_id_1> <point2d_x_1> <point2d_y_1>
 .
@@ -36,7 +36,7 @@
 
 | variable | primative | meaning |
 | -------------- | ------------- | --------- |
-| deeparch_version | float | version number of deeparch, **always** place at top for software compatibility | 
+| deeparc_version | float | version number of deeparc, **always** place at top for software compatibility | 
 | number_point2d | int | number of point2d line in this file |
 | number_instrinsic | int | number of instrinsic line in this file |
 | number_extrinsic_on_arc | int | number of extrinsic line in this file |

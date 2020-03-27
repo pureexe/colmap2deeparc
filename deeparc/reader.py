@@ -44,7 +44,6 @@ def binary_reader(binary_path,filetype='.bin'):
         # filter only useful point2d data
         for i in range(len(xys)):
             if point3d_ids[i] != -1:
-                x,y = xys[i]
                 point2d.append({
                     'image_id': img_id,
                     'camera_id': camera_id,
@@ -54,7 +53,7 @@ def binary_reader(binary_path,filetype='.bin'):
               
     return (point2d, instrinsic, extrinsic, point3d)
 
-def database_reader_bfs(database_path,image_dir = '', shift_point3d = [0,0,0]):
+def database_reader_bfs(database_path, shift_point3d = [0,0,0]):
   db = COLMAPDatabase.connect(database_path)
   c = db.cursor()
   c.execute('SELECT camera_id,model,params FROM cameras')

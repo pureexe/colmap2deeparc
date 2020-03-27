@@ -12,7 +12,6 @@ def main(args):
         print("reading database")
         colmap_data = database_reader_bfs(
             args.input,
-            args.image_dir,
             shift_point3d=[
                 args.shift_point3d_x,
                 args.shift_point3d_y,
@@ -34,7 +33,7 @@ def main(args):
         )
     write_file(args.output,colmap_data,reference_data)
 
-if __name__ == '__main__':
+def entry_point():
     parser = argparse.ArgumentParser(
         description='colmap2deeparc.py - convert colmap into deeparc format')
     parser.add_argument(
@@ -57,13 +56,6 @@ if __name__ == '__main__':
         default='',
         help='reference camera pose model')
     parser.add_argument(
-        '-d',
-        '--image_dir',
-        type=str,
-        default='',
-        help='image directory for get pixel info'
-    )
-    parser.add_argument(
         '-sx',
         '--shift-point3d-x',
         type=float,
@@ -85,3 +77,6 @@ if __name__ == '__main__':
         help='shift point3d in z axis (only using .db as input)'
     )    
     main(parser.parse_args())
+
+if __name__ == '__main__':
+    entry_point()
