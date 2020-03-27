@@ -17,5 +17,9 @@ setuptools.setup(
     entry_points={
      'console_scripts': ['colmap2deeparc=colmap2deeparc:entry_point'],
     },
+    install_requires=[
+        'numpy',
+        'scipy'
+    ],
     python_requires='>=3.6'
 )
